@@ -1,23 +1,11 @@
-#!/bin/bash/
-#Banner
-echo '
-##############################################################
-#   ______                                  _                #
-#  |  ____|                                | |               #
-#  | |__     _ __    __ _   _ __    _ __   | | __ __  __     #
-#  |  __|   | !__|  / _` | | !_ \  | !_ \  | |/ / \ \/ /     #
-#  | |      | |    | (_| | | | | | | | | | |   <   >  <      #
-#  |_|      |_|     \__,_| |_| |_| |_| |_| |_|\_\ /_/\_\     #
-#                                                            #
-######## Bienvenido al deploy de Francisco Paredes ###########         
-'                                                                                                             
-
 #### Declaracion de variables requeridas
 # Repositorio
-REPO=https://github.com/roxsross/devops-static-web.git
-#REPO=https://github.com/roxsross/bootcamp-devops-2023.git
-PROYECTO=devops-static-web
-#PROYECTO=app-295devops-travel
+#REPO=https://github.com/roxsross/devops-static-web.git
+URL_REPO=https://github.com/roxsross/bootcamp-devops-2023.git
+REPO=bootcamp-devops-2023
+#PROYECTO=devops-static-web
+BRANCH=clase2-linux-bash
+PROYECTO=app-295devops-travel
 DISCORD="https://discord.com/api/webhooks/1169002249939329156/7MOorDwzym-yBUs3gp0k5q7HyA42M5eYjfjpZgEwmAx1vVVcLgnlSh4TmtqZqCtbupov"
 R='\033[0;31m'   #'0;31' is Red's ANSI color code
 G='\033[0;32m'   #'0;32' is Green's ANSI color code
@@ -25,114 +13,253 @@ Y='\033[1;32m'   #'1;32' is Yellow's ANSI color code
 B='\033[0;34m'   #'0;34' is Blue's ANSI color code
 NOCOLOR='\033[0m'
 LOG=`date +%e-%m-%Y-%T`.log
+DB_USER="mariauser"
+DB_PASS="DbR00t"
 
-echo `date` $B Ejecutando STAGE 1: Init - Instalando paquetes necesarios $NOCOLOR 
-echo `date` $B Ejecutando STAGE 1: Init - Instalando paquetes necesarios $NOCOLOR >> $LOG
+########################## Banner #############################################
+echo -e $Y '
+######## Bienvenido al deploy de Francisco Paredes ########## 
+#   ______                                  _               #
+#  |  ____|                                | |              #
+#  | |__     _ __    __ _   _ __    _ __   | | __ __  __    #
+#  |  __|   | !__|  / _` | | !_ \  | !_ \  | |/ / \ \/ /    #
+#  | |      | |    | (_| | | | | | | | | | |   <   >  <     #
+#  |_|      |_|     \__,_| |_| |_| |_| |_| |_|\_\ /_/\_\    #
+#                                                           #
+# Email: frannkx@gmail.com                                  #
+# Discord: frannkx_88198                                    #
+# Linkedin: https://www.linkedin.com/in/frannkx/            #
+#############################################################        
+' $NOCOLOR                                                                                                             
+###############################################################################
 
-#Instalacion de paquetes en el sistema operativo ubuntu: [apache, php, mariadb, git, curl, etc]
-#Validación si esta instalado los paquetes o no , de manera de no reinstalar
-#Habilitar y Testear instalación de los paquetes
+# Verificacion de usuario root
+if [ $UID -eq 0 ] ; then
+	echo -e $G "\n Se confirma que el usuario `whoami` con user id $UID tiene privilegios necesarios para la instalación de paquetes" $NOCOLOR
+else
+	echo -e $R "\n No se tienen privilegios suficientes para realizar la instalación de paquetes, intentando subir privilegios para avanzar con la instalación" $NOCOLOR
+	exit
+    #sudo su
+    #echo -e $G "\n Ejecutando desde el usuario `whoami`" $NOCOLOR
+fi
 
-# validar usuario root
+############################# STAGE 1: Init ########################################
+echo -e "\n`date` $B Ejecutando STAGE 1: Init - Instalando paquetes necesarios $NOCOLOR" 
+echo -e "\n `date` $B Ejecutando STAGE 1: Init - Instalando paquetes necesarios $NOCOLOR" >> $LOG
 
 # Actualizando versiones de paquetes 
-sudo apt-get update -y
+
+echo -e "\n `date` $G Actualizando sistema operativo $NOCOLOR"
+sudo apt-get update -y && sudo apt-get upgrade -y
 
 # Instalando Git
 if dpkg -s git >/dev/null 2>&1; then
-	echo `date` $G Git se encuentra instalado $NOCOLOR
-	echo `date` $G Git se encuentra instalado $NOCOLOR >> $LOG
+	echo -e "\n `date` $G Git se encuentra instalado $NOCOLOR"
+	echo -e "\n `date` $G Git se encuentra instalado $NOCOLOR" >> $LOG
 else
-    echo `date` $G instalando git $NOCOLOR
-	echo `date` $G instalando git $NOCOLOR >> $LOG
+    echo -e "\n `date` $G instalando git $NOCOLOR"
+	echo -e "\n `date` $G instalando git $NOCOLOR" >> $LOG
 	sudo apt install git -y >> $LOG
-	git --version >> $LOG
 fi
 
 # Instalando curl
 if dpkg -s curl >/dev/null 2>&1; then
-	echo `date` $G curl se encuentra instalado $NOCOLOR 
-	echo `date` $G curl se encuentra instalado $NOCOLOR >> $LOG
+	echo -e "\n `date` $G curl se encuentra instalado $NOCOLOR" 
+	echo -e "\n `date` $G curl se encuentra instalado $NOCOLOR" >> $LOG
 else
-    echo `date` $G Instalando curl $NOCOLOR
-	echo `date` $G Instalando curl $NOCOLOR >> $LOG
+    echo -e "\n `date` $G Instalando curl $NOCOLOR"
+	echo -e "\n `date` $G Instalando curl $NOCOLOR" >> $LOG
 	sudo apt-get install curl -y >> $LOG
-	curl --version >> $LOG
 fi
 
 # Instalando Apache2
 if dpkg -s apache2 >/dev/null 2>&1; then
-	echo `date` $G Apache2 se encuentra instalado $NOCOLOR 
-	echo `date` $G Apache2 se encuentra instalado $NOCOLOR >> $LOG
+	echo -e "\n `date` $G Apache2 se encuentra instalado $NOCOLOR" 
+	echo -e "\n `date` $G Apache2 se encuentra instalado $NOCOLOR" >> $LOG
+	sudo systemctl status apache2
 else
-    echo `date` $G Instalando Apache2 $NOCOLOR
-	echo `date` $G Instalando Apache2 $NOCOLOR >> $LOG
+    echo -e "\n `date` $G Instalando Apache2 $NOCOLOR"
+	echo -e "\n `date` $G Instalando Apache2 $NOCOLOR" >> $LOG
 	sudo apt-get install apache2 -y >> $LOG
-	sudo apt-get install libapache2-mod-php -y >> $LOG
-	apache2 -v
 	sudo systemctl enable apache2
-	#sudo systemctl status apache2
+	sudo systemctl status apache2
 fi
-
 
 # Instalando PHP
 if dpkg -s php >/dev/null 2>&1; then
-	echo `date` $G PHP se encuentra instalado $NOCOLOR
-	echo `date` $G PHP se encuentra instalado $NOCOLOR >> $LOG             
+	echo -e "\n `date` $G PHP se encuentra instalado $NOCOLOR"
+	echo -e "\n `date` $G PHP se encuentra instalado $NOCOLOR" >> $LOG             
 else
-    echo `date`  $G Instalando PHP $NOCOLOR
-	echo `date`  $G Instalando PHP $NOCOLOR >> $LOG    
+    echo -e "\n `date`  $G Instalando PHP $NOCOLOR"
+	echo -e "\n `date`  $G Instalando PHP $NOCOLOR" >> $LOG    
 	sudo apt-get install php -y
-	php --version
 fi
 
-# Instalacion de Mysql 
-if dpkg -s mysql-server >/dev/null 2>&1; then 
-	echo `date` $G MySql se encuentra instalado $NOCOLOR
-	echo `date` $G MySql se encuentra instalado $NOCOLOR >> $LOG
+if dpkg -s libapache2-mod-php >/dev/null 2>&1; then
+	echo -e "\n `date` $G libapache2-mod-php se encuentra instalado $NOCOLOR"
+	echo -e "\n `date` $G libapache2-mod-php se encuentra instalado $NOCOLOR" >> $LOG             
+else
+    echo -e "\n `date`  $G Instalando libapache2-mod-php $NOCOLOR"
+	echo -e "\n `date`  $G Instalando libapache2-mod-php $NOCOLOR" >> $LOG    
+	sudo apt-get install libapache2-mod-php -y
+fi
+
+if dpkg -s php-mysql >/dev/null 2>&1; then
+	echo -e "\n `date` $G PHP-Mysql se encuentra instalado $NOCOLOR"
+	echo -e "\n `date` $G PHP-Mysql se encuentra instalado $NOCOLOR" >> $LOG             
+else
+    echo -e "\n `date`  $G Instalando PHP-Mysql $NOCOLOR"
+	echo -e "\n `date`  $G Instalando PHP-Mysql $NOCOLOR" >> $LOG    
+	sudo apt-get install php-mysql -y
+fi
+
+if dpkg -s php-mbstring >/dev/null 2>&1; then
+	echo -e "\n `date` $G php-mbstring se encuentra instalado $NOCOLOR"
+	echo -e "\n `date` $G php-mbstring se encuentra instalado $NOCOLOR" >> $LOG             
+else
+    echo -e "\n `date`  $G Instalando php-mbstring $NOCOLOR"
+	echo -e "\n `date`  $G Instalando php-mbstring $NOCOLOR" >> $LOG    
+	sudo apt-get install php-mbstring -y
+fi
+
+if dpkg -s php-zip >/dev/null 2>&1; then
+	echo -e "\n `date` $G php-zip se encuentra instalado $NOCOLOR"
+	echo -e "\n `date` $G php-zip se encuentra instalado $NOCOLOR" >> $LOG             
+else
+    echo -e "\n `date`  $G Instalando php-zip $NOCOLOR"
+	echo -e "\n `date`  $G Instalando php-zip $NOCOLOR" >> $LOG    
+	sudo apt-get install php-zip -y
+fi
+
+if dpkg -s php-gd >/dev/null 2>&1; then
+	echo -e "\n `date` $G php-gd se encuentra instalado $NOCOLOR"
+	echo -e "\n `date` $G php-gd se encuentra instalado $NOCOLOR" >> $LOG             
+else
+    echo -e "\n `date`  $G Instalando php-gd $NOCOLOR"
+	echo -e "\n `date`  $G Instalando php-gd $NOCOLOR" >> $LOG    
+	sudo apt-get install php-gd -y
+fi
+
+if dpkg -s php-json >/dev/null 2>&1; then
+	echo -e "\n `date` $G php-json se encuentra instalado $NOCOLOR"
+	echo -e "\n `date` $G php-json se encuentra instalado $NOCOLOR" >> $LOG             
+else
+    echo -e "\n `date`  $G Instalando php-json $NOCOLOR"
+	echo -e "\n `date`  $G Instalando php-json $NOCOLOR" >> $LOG    
+	sudo apt-get install php-json -y
+fi
+
+if dpkg -s php-curl >/dev/null 2>&1; then
+	echo -e "\n `date` $G php-curl se encuentra instalado $NOCOLOR"
+	echo -e "\n `date` $G php-curl se encuentra instalado $NOCOLOR" >> $LOG             
+else
+    echo -e "\n `date`  $G Instalando php-curl $NOCOLOR"
+	echo -e "\n `date`  $G Instalando php-curl $NOCOLOR" >> $LOG    
+	sudo apt-get install php-curl -y
+fi
+
+# Instalacion de Base de datos maria DB 
+if dpkg -s mariadb-server >/dev/null 2>&1; then 
+	echo -e "\n `date` $G Mariadb se encuentra instalado $NOCOLOR"
+	echo -e "\n `date` $G Mariadb se encuentra instalado $NOCOLOR" >> $LOG
+	sudo systemctl status mariadb
 else    
-    echo `date` $G instalando Mysql $NOCOLOR
-	echo `date` $G instalando Mysql $NOCOLOR >> $LOG
-	sudo apt install mysql-server -y
-	#sudo systemctl status mysql.service
+    echo -e "\n `date` $G instalando Mariadb $NOCOLOR"
+	echo -e "\n `date` $G instalando Mariadb $NOCOLOR" >> $LOG
+	sudo apt install mariadb-server -y
+	sudo systemctl start mariadb
+	sudo systemctl enable mariadb
+	sudo systemctl status mariadb
 fi
 
-echo `date` $B Ejecutando STAGE 2: Build - Clonando Repositorio de aplicacion $NOCOLOR
-echo `date` $B Ejecutando STAGE 2: Build - Clonando Repositorio de aplicacion $NOCOLOR >> $LOG
+#Creacion de usuarios en bd
+echo -e $G "\n Configurando base de datos" $NOCOLOR
+
+#cat > db-load-script.sql <<-EOF
+#CREATE DATABASE devopstravel;
+#CREATE USER 'codeuser'@'localhost' IDENTIFIED BY 'codepass';
+#GRANT ALL PRIVILEGES ON *.* TO 'codeuser'@'localhost';
+#FLUSH PRIVILEGES;
+#EOF
+
+cat > db-load-script.sql <<-EOF
+CREATE DATABASE devopstravel;
+CREATE USER `echo ${DB_USER}`@'localhost' IDENTIFIED BY '`echo ${DB_PASS}`';
+GRANT ALL PRIVILEGES ON *.* TO `echo ${DB_USER}`@'localhost';
+FLUSH PRIVILEGES;
+EOF
+
+mysql < db-load-script.sql
+
+# Validando versiones instaladas 
+echo -e $G "\n Información del Sistema Operativo" $NOCOLOR
+hostnamectl
+echo -e $G "\n Version de Git" $NOCOLOR
+git --version
+git --version >> $LOG
+echo -e $G "\n Version de curl" $NOCOLOR
+curl --version
+curl --version >> $LOG
+echo -e $G " \n Version de apache2" $NOCOLOR
+apache2 -v
+apache2 -v >> $LOG
+echo -e $G "\n Version de PHP" $NOCOLOR
+php --version
+php --version >> $LOG
+echo -e $G "\n Version de MariaDB" $NOCOLOR
+mariadb --version
+mariadb --version >> $LOG
+
+
+############################# STAGE 2: Build ########################################
+
+echo -e "\n\n `date` $B Ejecutando STAGE 2: Build - Clonando Repositorio de aplicacion $NOCOLOR"
+echo -e "\n\n  `date` $B Ejecutando STAGE 2: Build - Clonando Repositorio de aplicacion $NOCOLOR" >> $LOG
 
 #Clonar el repositorio de la aplicación
 #Validar si el repositorio de la aplicación no existe realizar un git clone. y si existe un git pull
-#Mover al directorio donde se guardar los archivos de configuración de apache /var/www/html/
-#Testear existencia del codigo de la aplicación
-#Ajustar el config de php para que soporte los archivos dinamicos de php agregando index.php
-#Testear la compatibilidad -> ejemplo http://localhost/info.php
-#Si te muestra resultado de una pantalla informativa php , estariamos funcional para la siguiente etapa.
 
-if [ -d $PROYECTO ] ; then
-    echo `date` $G El repositorio existe $NOCOLOR
-	echo `date` $G El repositorio existe $NOCOLOR >> $LOG
-    git pull  
+if [ -d $REPO ] ; then
+    echo -e " `date` $G El repositorio existe $NOCOLOR"
+	echo -e " `date` $G El repositorio existe $NOCOLOR" >> $LOG
+	pwd
+    cd $REPO
+	git pull
+	  
 else
-    echo `date` $G El repositorio no existe, iniciando clone $NOCOLOR
-	echo `date` $G El repositorio no existe, iniciando clone $NOCOLOR >> $LOG
-    git clone $REPO
+    echo -e " `date` $G El repositorio no existe, iniciando clone $NOCOLOR"
+	echo -e " `date` $G El repositorio no existe, iniciando clone $NOCOLOR" >> $LOG
+    git clone $URL_REPO
+	cd $REPO
 fi
 
-cd $PROYECTO 
-sudo mv * /var/www/html/
+#Mover al directorio donde se guardar los archivos de configuración de apache /var/www/html/https://github.com/roxsross/bootcamp-devops-2023.git
 
-echo `date` $B Ejecutando STAGE 3: Deploy - Desplegando aplicación $NOCOLOR
-echo `date` $B Ejecutando STAGE 3: Deploy - Desplegando aplicación $NOCOLOR >> $LOG
+if git branch |grep $BRANCH >/dev/null 2>&1; then
+    echo -e $G "Repositorio en rama $BRANCH"
+    mv /var/www/html/index.html /var/www/html/index.html.bkp
+	cp -r $PROYECTO/* /var/www/html/
+	systemctl reload apache2
 
-#Es momento de probar la aplicación, recuerda hacer un reload de apache y acceder a la aplicacion DevOps Travel
-#Aplicación disponible para el usuario final.
+    #cp -r * /var/www/html/
+    #sed -i 's/xxx.xxx.xxx.xxx/localhost/g /var/www/html/index.php
+else
+    echo -e $R "El repo no esta en $BRANCH" $NOCOLOR
+	git checkout $BRANCH #Ajuste particulpar para acceder al branch en donde esta la carpeta de la web
+	mv /var/www/html/index.html /var/www/html/index.html.bck
+	cp -r $PROYECTO/* /var/www/html/
+	systemctl reload apache2
+fi
 
- #w3m localhost
+#Testear existencia del codigo de la aplicación
+if curl localhost >/dev/null 2>&1; then
+	echo -e $G "El codigo esta funcional $BRANCH" $NOCOLOR
+else
+	echo -e $R "No esta funcional el codigo $BRANCH" $NOCOLOR
+fi
 
- echo `date` $B Ejecutando STAGE 4: Notify - Notificando estatus a Discord $NOCOLOR
- echo `date` $B Ejecutando STAGE 4: Notify - Notificando estatus a Discord $NOCOLOR >> $LOG
+#Ajustar el config de php para que soporte los archivos dinamicos de php agreganfo index.php
 
- #El status de la aplicacion si esta respondiendo correctamente o esta fallando debe reportarse via webhook al canal de discord #deploy-bootcamp
- #Informacion a mostrar : Author del Commit, Commit, descripcion, grupo y status
+#Testear la compatibilidad -> ejemplo http://localhost/info.php
 
- #DISCORD="https://discord.com/api/webhooks/1169002249939329156/7MOorDwzym-yBUs3gp0k5q7HyA42M5eYjfjpZgEwmAx1vVVcLgnlSh4TmtqZqCtbupov"
+#Si te muestra resultado de una pantalla informativa php , estariamos funcional para la siguiente etapa.
