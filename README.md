@@ -34,17 +34,6 @@ Luego de tener instalado el software necesario y confirmar que los requerimiento
 
 4. Si el depliegue salio de manera correcta visualizara un mensaje indicando lo siguiente:
 
-default:  Notificando al webhook de Discord el siguiente mensaje
-default:  Despliegue del repositorio bootcamp-devops-2023:
-default: La página web localhost está en línea.
-default: Commit: 74f2a15
-default: Autor: Rossana Suarez
-default: https://github.com/roxsross/bootcamp-devops-2023.git
-default: Descripción: update
-default: Estudiante Individual: Francisco Paredes
-
-Logs almacenados en app-295devops-travel/Deploy-DD-MM-AAAA-HH:mm:ss.log
-
 ![Menasaje Final](img/mensaje_final.png "Mensaje Final")
 
 
